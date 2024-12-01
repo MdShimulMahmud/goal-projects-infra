@@ -4,46 +4,32 @@ pipeline {
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Docker image tag for frontend and backend')
     }
     environment {
-        GH_TOKEN = credentials('github-token')  // Referencing the GitHub token securely
+        GH_TOKEN = credentials('github-token')  // Secure GitHub token reference
     }
     stages {
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], 
-                          userRemoteConfigs: [[url: 'https://github.com/MdShimulMahmud/goal-projects-infra.git',
-                                               credentialsId: 'github-credentials']]])
-            }
-        }
-        stage('Update Manifests') {
+        stage('Update and Push Manifests') {
             steps {
                 script {
                     def frontendTag = "shimulmahmud/frontend:${params.IMAGE_TAG}"
                     def backendTag = "shimulmahmud/backend:${params.IMAGE_TAG}"
-                    
+
+                    // Checkout the repository, update the deployment.yaml, and push the changes
                     sh """
-                        # Ensure you're on the master branch before making changes
+                        # Checkout the repository
                         git checkout master
+
+                        # Update image tags in deployment.yaml
                         sed -i 's|image: .*frontend:.*|image: ${frontendTag}|' k8s/deployment.yaml
                         sed -i 's|image: .*backend:.*|image: ${backendTag}|' k8s/deployment.yaml
+
+                        # Configure Git user details and commit the changes
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins@localhost"
                         git add k8s/deployment.yaml
                         git commit -m "Update image tags to frontend=${frontendTag}, backend=${backendTag}"
-                    """
-                }
-            }
-        }
-        stage('Push Changes') {
-            steps {
-                script {
-                    sh """
-                        # Ensure we're on the master branch before pulling
-                        git checkout master
 
-                        # Pull with a strategy to avoid divergence issues
+                        # Pull latest changes and push the commit
                         git pull --rebase origin master
-
-                        # Push the changes
                         git push https://\$GH_TOKEN@github.com/MdShimulMahmud/goal-projects-infra.git master
                     """
                 }
