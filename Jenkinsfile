@@ -1,50 +1,40 @@
 pipeline {
     agent any
-    environment {
-        GH_TOKEN = credentials('github-token')  // GitHub token
-    }
     parameters {
-        string(name: 'FRONTEND_IMAGE_TAG', defaultValue: '', description: 'Frontend Docker image tag')
-        string(name: 'BACKEND_IMAGE_TAG', defaultValue: '', description: 'Backend Docker image tag')
+        string(name: 'IMAGE_TAG', defaultValue: '', description: 'Docker image tag for frontend and backend')
     }
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], 
+                          userRemoteConfigs: [[url: 'https://github.com/MdShimulMahmud/goal-projects-infra.git',
+                                               credentialsId: 'github-credentials']]])
+            }
+        }
+        stage('Update Manifests') {
             steps {
                 script {
+                    // Use the IMAGE_TAG parameter to update both frontend and backend tags
+                    def frontendTag = "shimulmahmud/frontend:${params.IMAGE_TAG}"
+                    def backendTag = "shimulmahmud/backend:${params.IMAGE_TAG}"
+                    
                     sh """
-                        git clone https://github.com/MdShimulMahmud/goal-projects-infra.git
-                        cd goal-projects-infra
+                        sed -i 's|image: .*frontend:.*|image: ${frontendTag}|' k8s/deployment.yaml
+                        sed -i 's|image: .*backend:.*|image: ${backendTag}|' k8s/deployment.yaml
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins@localhost"
+                        git add k8s/deployment.yaml
+                        git commit -m "Update image tags to frontend=${frontendTag}, backend=${backendTag}"
                     """
                 }
             }
         }
-        stage('Update Image Tags') {
+        stage('Push Changes') {
             steps {
                 script {
-                    sh """
-                        cd goal-projects-infra
-
-                        # Update image tags in k8s/deployment.yaml
-                        sed -i "s|shimulmahmud/frontend:.*|${params.FRONTEND_IMAGE_TAG}|" k8s/deployment.yaml
-                        sed -i "s|shimulmahmud/backend:.*|${params.BACKEND_IMAGE_TAG}|" k8s/deployment.yaml
-
-                        # Commit and push changes
-                        git add k8s/deployment.yaml
-                        git commit -m "Update image tags to ${params.FRONTEND_IMAGE_TAG} and ${params.BACKEND_IMAGE_TAG}"
-                        git push https://${GH_TOKEN}@github.com/MdShimulMahmud/goal-projects-infra.git
-                    """
+                    sh "git push"
                 }
             }
-        }
-    }
-    post {
-        always {
-            echo "Update manifest pipeline completed."
-        }
-        failure {
-            echo "Update manifest pipeline failed."
         }
     }
 }
