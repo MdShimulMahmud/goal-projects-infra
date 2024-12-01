@@ -35,6 +35,7 @@ pipeline {
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins@localhost"
                         git add k8s/deployment.yaml
+                        git status  # Check the status to see what is staged for commit
                         git commit -m "Update image tags to frontend=${frontendTag}, backend=${backendTag}"
                     """
                 }
@@ -43,8 +44,10 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    // Push the changes to the master branch
+                    // If there are untracked files, handle them
                     sh """
+                        git add .  # Add all untracked files (e.g., goal-projects-infra/ if relevant)
+                        git commit -m "Add untracked files"
                         git push origin master
                     """
                 }
