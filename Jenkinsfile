@@ -11,6 +11,17 @@ pipeline {
                                                credentialsId: 'github-credentials']]])
             }
         }
+        stage('Ensure on Master Branch') {
+            steps {
+                script {
+                    // Make sure we are on the master branch
+                    sh """
+                        git checkout master
+                        git pull origin master
+                    """
+                }
+            }
+        }
         stage('Update Manifests') {
             steps {
                 script {
@@ -32,10 +43,8 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    // Ensure we're on the 'master' branch before pushing
+                    // Push the changes to the master branch
                     sh """
-                        git checkout master
-                        git pull origin master
                         git push origin master
                     """
                 }
