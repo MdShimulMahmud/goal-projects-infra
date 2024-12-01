@@ -32,7 +32,12 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    sh "git push -u origin master"
+                    // Ensure we're on the 'master' branch before pushing
+                    sh """
+                        git checkout master
+                        git pull origin master
+                        git push origin master
+                    """
                 }
             }
         }
