@@ -3,6 +3,9 @@ pipeline {
     parameters {
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Docker image tag for frontend and backend')
     }
+    environment {
+        GH_TOKEN = credentials('github-token')  // Referencing the GitHub token
+    }
     stages {
         stage('Checkout') {
             steps {
@@ -11,21 +14,9 @@ pipeline {
                                                credentialsId: 'github-credentials']]])
             }
         }
-        stage('Ensure on Master Branch') {
-            steps {
-                script {
-                    // Make sure we are on the master branch
-                    sh """
-                        git checkout master
-                        git pull origin master
-                    """
-                }
-            }
-        }
         stage('Update Manifests') {
             steps {
                 script {
-                    // Use the IMAGE_TAG parameter to update both frontend and backend tags
                     def frontendTag = "shimulmahmud/frontend:${params.IMAGE_TAG}"
                     def backendTag = "shimulmahmud/backend:${params.IMAGE_TAG}"
                     
@@ -35,7 +26,6 @@ pipeline {
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins@localhost"
                         git add k8s/deployment.yaml
-                        git status  # Check the status to see what is staged for commit
                         git commit -m "Update image tags to frontend=${frontendTag}, backend=${backendTag}"
                     """
                 }
@@ -44,11 +34,11 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    // If there are untracked files, handle them
+                    // Ensure we're on the master branch
                     sh """
-                        git add .  # Add all untracked files (e.g., goal-projects-infra/ if relevant)
-                        git commit -m "Add untracked files"
-                        git push origin master
+                        git checkout master
+                        git pull origin master
+                        git push https://github.com/MdShimulMahmud/goal-projects-infra.git master
                     """
                 }
             }
