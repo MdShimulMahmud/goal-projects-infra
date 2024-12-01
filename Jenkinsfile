@@ -32,7 +32,7 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    sh "git push"
+                    sh "git push -u origin master"
                 }
             }
         }
