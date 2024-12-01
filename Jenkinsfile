@@ -4,7 +4,7 @@ pipeline {
         string(name: 'IMAGE_TAG', defaultValue: '', description: 'Docker image tag for frontend and backend')
     }
     environment {
-        GH_TOKEN = credentials('github-token')  // Referencing the GitHub token
+        GH_TOKEN = credentials('github-token')  // Referencing the GitHub token securely
     }
     stages {
         stage('Checkout') {
@@ -37,9 +37,14 @@ pipeline {
             steps {
                 script {
                     sh """
-                        # Ensure we're on the master branch before pushing
-                        git pull origin master
-                        git push https://${GH_TOKEN}@github.com/MdShimulMahmud/goal-projects-infra.git master
+                        # Ensure we're on the master branch before pulling
+                        git checkout master
+
+                        # Pull with a strategy to avoid divergence issues
+                        git pull --rebase origin master
+
+                        # Push the changes
+                        git push https://\$GH_TOKEN@github.com/MdShimulMahmud/goal-projects-infra.git master
                     """
                 }
             }
