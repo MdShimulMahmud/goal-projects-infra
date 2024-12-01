@@ -21,6 +21,8 @@ pipeline {
                     def backendTag = "shimulmahmud/backend:${params.IMAGE_TAG}"
                     
                     sh """
+                        # Ensure you're on the master branch before making changes
+                        git checkout master
                         sed -i 's|image: .*frontend:.*|image: ${frontendTag}|' k8s/deployment.yaml
                         sed -i 's|image: .*backend:.*|image: ${backendTag}|' k8s/deployment.yaml
                         git config user.name "jenkins-bot"
@@ -34,11 +36,10 @@ pipeline {
         stage('Push Changes') {
             steps {
                 script {
-                    // Ensure we're on the master branch
                     sh """
-                        git checkout master
+                        # Ensure we're on the master branch before pushing
                         git pull origin master
-                        git push https://github.com/MdShimulMahmud/goal-projects-infra.git master
+                        git push https://${GH_TOKEN}@github.com/MdShimulMahmud/goal-projects-infra.git master
                     """
                 }
             }
