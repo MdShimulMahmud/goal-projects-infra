@@ -6,6 +6,7 @@ metadata:
     app: frontend
     type: frontend
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:
@@ -33,6 +34,7 @@ metadata:
     app: backend
     type: backend
 spec:
+  revisionHistoryLimit: 1
   replicas: 1
   selector:
     matchLabels:
