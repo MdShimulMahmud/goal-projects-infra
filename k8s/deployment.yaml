@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: shimulmahmud/frontend:v1.1.7
+        image: shimulmahmud/frontend:v1.1.8
         ports:
         - containerPort: 3000
 
@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
       - name: backend-conatiner
-        image: shimulmahmud/backend:v1.1.7
+        image: shimulmahmud/backend:v1.1.8
         ports:
         - containerPort: 5000
         volumeMounts:
