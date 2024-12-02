@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    deployment.kubernetes.io/revision: null
   name: frontend-deployment
   labels:
     app: frontend
@@ -28,6 +30,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    deployment.kubernetes.io/revision: null
   name: backend-deployment
   labels:
     app: backend
